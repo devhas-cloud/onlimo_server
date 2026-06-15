@@ -28,6 +28,8 @@ def add():
         device_name = request.form.get('device_name', '').strip()
         userftp = request.form.get('userftp', '').strip() or device_id
         passwordftp = request.form.get('passwordftp', '').strip() or 'onlimo_pass_2026'
+        read_csv_status = request.form.get('read_csv_status', 'inactive')
+        dlh_status = request.form.get('dlh_status', 'inactive')
 
         if not device_id:
             flash('Device ID wajib diisi', 'danger')
@@ -47,8 +49,8 @@ def add():
             device_name=device_name,
             userftp=userftp,
             passwordftp=passwordftp,
-            dlh_status='inactive',
-            read_csv_status='inactive'
+            dlh_status=dlh_status,
+            read_csv_status=read_csv_status
         )
         db.session.add(device)
 
