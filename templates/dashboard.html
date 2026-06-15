@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Onlimo DLH{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h4><i class="bi bi-speedometer2"></i> Dashboard</h4>
+</div>
+
+<div class="row mb-4 g-3">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon"><i class="bi bi-cpu"></i></div>
+            <div class="stat-value">{{ device_count }}</div>
+            <div class="stat-label">Total Devices</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card stat-success">
+            <div class="stat-icon"><i class="bi bi-file-earmark-check"></i></div>
+            <div class="stat-value">{{ active_devices }}</div>
+            <div class="stat-label">Active CSV Readers</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card stat-warning">
+            <div class="stat-icon"><i class="bi bi-calendar-date"></i></div>
+            <div class="stat-value">{{ today_data_count }}</div>
+            <div class="stat-label">Data Hari Ini</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card stat-purple">
+            <div class="stat-icon"><i class="bi bi-database"></i></div>
+            <div class="stat-value">{{ total_data_count }}</div>
+            <div class="stat-label">Total Data</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4 g-3">
+    <div class="col-md-6">
+        <div class="status-card card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-cloud-upload"></i> Status Pengiriman DLH</span>
+                <span class="badge bg-light text-primary">Aktif: {{ dlh_active_devices }} device</span>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4 status-item">
+                        <div class="status-count text-warning">{{ pending_dlh }}</div>
+                        <div class="status-label">Pending</div>
+                    </div>
+                    <div class="col-4 status-item">
+                        <div class="status-count text-success">{{ sent_dlh }}</div>
+                        <div class="status-label">Sent</div>
+                    </div>
+                    <div class="col-4 status-item">
+                        <div class="status-count text-danger">{{ failed_dlh }}</div>
+                        <div class="status-label">Failed</div>
+                    </div>
+                </div>
+                {% set total_dlh = pending_dlh + sent_dlh + failed_dlh %}
+                {% if total_dlh > 0 %}
+                <div class="progress mt-2" style="height:8px;">
+                    <div class="progress-bar bg-success" style="width:{{ (sent_dlh/total_dlh*100)|round(1) }}%"></div>
+                    <div class="progress-bar bg-warning" style="width:{{ (pending_dlh/total_dlh*100)|round(1) }}%"></div>
+                    <div class="progress-bar bg-danger" style="width:{{ (failed_dlh/total_dlh*100)|round(1) }}%"></div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="status-card card">
+            <div class="card-header {% if has_config and has_config.has_status == 'active' %}bg-success{% else %}bg-secondary{% endif %} text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-broadcast"></i> Status Pengiriman HAS</span>
+                {% if has_config %}
+                <span class="badge bg-light {% if has_config.has_status == 'active' %}text-success{% else %}text-secondary{% endif %}">
+                    {{ has_config.has_status|upper }}
+                </span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4 status-item">
+                        <div class="status-count text-warning">{{ pending_has }}</div>
+                        <div class="status-label">Pending</div>
+                    </div>
+                    <div class="col-4 status-item">
+                        <div class="status-count text-success">{{ sent_has }}</div>
+                        <div class="status-label">Sent</div>
+                    </div>
+                    <div class="col-4 status-item">
+                        <div class="status-count text-danger">{{ failed_has }}</div>
+                        <div class="status-label">Failed</div>
+                    </div>
+                </div>
+                {% set total_has = pending_has + sent_has + failed_has %}
+                {% if total_has > 0 %}
+                <div class="progress mt-2" style="height:8px;">
+                    <div class="progress-bar bg-success" style="width:{{ (sent_has/total_has*100)|round(1) }}%"></div>
+                    <div class="progress-bar bg-warning" style="width:{{ (pending_has/total_has*100)|round(1) }}%"></div>
+                    <div class="progress-bar bg-danger" style="width:{{ (failed_has/total_has*100)|round(1) }}%"></div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-table text-primary"></i> Data Terakhir</span>
+        <a href="{{ url_for('data.index') }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-right"></i> Lihat Semua
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Device</th>
+                        {% for key, label in param_columns %}
+                        <th>{{ label }}</th>
+                        {% endfor %}
+                        <th>DLH</th>
+                        <th>HAS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        <td class="row-number">{{ (pagination.page - 1) * pagination.per_page + loop.index }}</td>
+                        <td class="timestamp">{{ row.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td class="device-id">{{ row.device_id }}</td>
+                        {% for key, label in param_columns %}
+                        <td class="{% if getattr(row, key, None) is not none %}param-value{% else %}param-empty{% endif %}">
+                            {% if getattr(row, key, None) is not none %}{{ getattr(row, key) }}{% else %}&mdash;{% endif %}
+                        </td>
+                        {% endfor %}
+                        <td>
+                            {% if row.dlh_send_status == 'sent' %}
+                            <span class="badge-status badge-sent">Sent</span>
+                            {% elif row.dlh_send_status == 'failed' %}
+                            <span class="badge-status badge-failed">Failed</span>
+                            {% else %}
+                            <span class="badge-status badge-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.has_send_status == 'sent' %}
+                            <span class="badge-status badge-sent">Sent</span>
+                            {% elif row.has_send_status == 'failed' %}
+                            <span class="badge-status badge-failed">Failed</span>
+                            {% else %}
+                            <span class="badge-status badge-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not data %}
+                    <tr>
+                        <td colspan="{{ 5 + param_columns|length }}" class="text-center text-muted py-4">
+                            Belum ada data
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if pagination.pages > 1 %}
+    <div class="card-body border-top d-flex justify-content-between align-items-center">
+        <small class="text-muted">
+            Halaman {{ pagination.page }} dari {{ pagination.pages }}
+        </small>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('dashboard.index', page=pagination.prev_num) }}">&laquo;</a>
+                </li>
+                {% endif %}
+                {% for page_num in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+                {% if page_num %}
+                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('dashboard.index', page=page_num) }}">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+                {% endfor %}
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('dashboard.index', page=pagination.next_num) }}">&raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

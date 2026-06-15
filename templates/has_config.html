@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}HAS Config - Onlimo DLH{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h4><i class="bi bi-broadcast"></i> Konfigurasi HAS Portal</h4>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <form method="POST">
+                <div class="card-body">
+                    <div class="card-title-section">Status</div>
+
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-md-4">
+                            <label class="form-label mb-0">HAS Portal Status</label>
+                            <div class="form-text">Jika active, data baru dikirim langsung ke HAS Portal setelah CSV diproses.</div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                       id="has_status_switch" name="has_status"
+                                       value="active"
+                                       {% if config.has_status == 'active' %}checked{% endif %}>
+                                <label class="form-check-label" for="has_status_switch">
+                                    {% if config.has_status == 'active' %}
+                                    <span class="badge-status badge-active">Active</span>
+                                    {% else %}
+                                    <span class="badge-status badge-inactive">Inactive</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+                    <div class="card-title-section">Koneksi</div>
+
+                    <div class="mb-3">
+                        <label for="has_api_url" class="form-label">HAS API URL</label>
+                        <input type="url" class="form-control" id="has_api_url" name="has_api_url"
+                               value="{{ config.has_api_url or '' }}"
+                               placeholder="https://has-portal.example.com/api/v1/data">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="has_api_key" class="form-label">HAS API Key</label>
+                        <input type="password" class="form-control" id="has_api_key" name="has_api_key"
+                               value="{{ config.has_api_key or '' }}"
+                               placeholder="API key untuk autentikasi">
+                    </div>
+
+                    <div class="divider"></div>
+                    <div class="card-title-section">Parameter yang Dikirim</div>
+                    <div class="form-text mb-3">
+                        Pilih parameter yang akan dikirim ke HAS Portal. Parameter yang tidak dipilih akan diabaikan.
+                    </div>
+
+                    <div class="row g-2">
+                        {% for key, label in all_params %}
+                        <div class="col-lg-3 col-md-4 col-sm-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="has_params"
+                                       id="param_{{ key }}" value="{{ key }}"
+                                       {% if key in current_params %}checked{% endif %}>
+                                <label class="form-check-label" for="param_{{ key }}">
+                                    {{ label }} <small class="text-muted">({{ key }})</small>
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="divider"></div>
+                    <div class="card-title-section">Preview Request</div>
+
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <small class="text-muted">Format pengiriman data ke HAS Portal:</small>
+                            <pre class="mt-2 mb-0" style="font-size: 0.8rem; color: var(--text-secondary);"><code>POST {{ config.has_api_url or '[API URL]' }}
+Content-Type: application/json
+X-API-Key: {{ config.has_api_key or '[API Key]' }}
+
+{
+  "device_id": "DEVICE001",
+  "data": [
+    {
+      "recorded_at": "2026-06-15T09:00:00Z",
+      "timestamp": 1750000000,
+      "parameter_name": "ph",
+      "value": 7.1
+    }
+  ]
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Simpan Konfigurasi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const switchEl = document.getElementById('has_status_switch');
+
+switchEl.addEventListener('change', function() {
+    const labelEl = this.parentElement.querySelector('.form-check-label .badge-status');
+    if (this.checked) {
+        labelEl.textContent = 'Active';
+        labelEl.className = 'badge-status badge-active';
+    } else {
+        labelEl.textContent = 'Inactive';
+        labelEl.className = 'badge-status badge-inactive';
+    }
+});
+</script>
+{% endblock %}

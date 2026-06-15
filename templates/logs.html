@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Logs - Onlimo DLH{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h4><i class="bi bi-journal-text"></i> Logs Pengiriman</h4>
+</div>
+
+<div class="filter-card card mb-3">
+    <div class="card-header">
+        <i class="bi bi-funnel"></i> Filter Log
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('logs.index') }}" class="row g-2 align-items-end">
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">Tipe Log</label>
+                <select name="log_type" class="form-select form-select-sm">
+                    <option value="dlh" {% if filters.log_type == 'dlh' %}selected{% endif %}>DLH</option>
+                    <option value="has" {% if filters.log_type == 'has' %}selected{% endif %}>HAS Portal</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">Device</label>
+                <select name="device_id" class="form-select form-select-sm">
+                    <option value="">Semua</option>
+                    {% for dev_id, dev_name in device_choices %}
+                    <option value="{{ dev_id }}" {% if filters.device_id == dev_id %}selected{% endif %}>
+                        {{ dev_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">Semua</option>
+                    <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="sent" {% if filters.status == 'sent' %}selected{% endif %}>Sent</option>
+                    <option value="failed" {% if filters.status == 'failed' %}selected{% endif %}>Failed</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-3">
+                <label class="form-label">Dari</label>
+                <input type="date" name="date_from" class="form-control form-control-sm"
+                       value="{{ filters.date_from }}">
+            </div>
+            <div class="col-lg-2 col-md-3">
+                <label class="form-label">Sampai</label>
+                <input type="date" name="date_to" class="form-control form-control-sm"
+                       value="{{ filters.date_to }}">
+            </div>
+            <div class="col-lg-2 col-md-4 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+                <a href="{{ url_for('logs.index') }}" class="btn btn-sm btn-secondary">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Device</th>
+                        <th>Tanggal</th>
+                        {% for key, label in param_columns %}
+                        <th>{{ label }}</th>
+                        {% endfor %}
+                        {% if filters.log_type == 'has' %}
+                        <th>HAS Status</th>
+                        {% else %}
+                        <th>DLH Status</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="row-number">{{ log.id }}</td>
+                        <td class="device-id">{{ log.device_id }}</td>
+                        <td class="timestamp">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        {% for key, label in param_columns %}
+                        <td class="{% if getattr(log, key, None) is not none %}param-value{% else %}param-empty{% endif %}">
+                            {% if getattr(log, key, None) is not none %}{{ getattr(log, key) }}{% else %}&mdash;{% endif %}
+                        </td>
+                        {% endfor %}
+                        {% if filters.log_type == 'has' %}
+                        <td>
+                            {% if log.has_send_status == 'sent' %}
+                            <span class="badge-status badge-sent">Sent</span>
+                            {% elif log.has_send_status == 'failed' %}
+                            <span class="badge-status badge-failed">Failed</span>
+                            {% else %}
+                            <span class="badge-status badge-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                        {% else %}
+                        <td>
+                            {% if log.dlh_send_status == 'sent' %}
+                            <span class="badge-status badge-sent">Sent</span>
+                            {% elif log.dlh_send_status == 'failed' %}
+                            <span class="badge-status badge-failed">Failed</span>
+                            {% else %}
+                            <span class="badge-status badge-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                    {% if not logs %}
+                    <tr>
+                        <td colspan="{{ 4 + param_columns|length }}" class="text-center text-muted py-4">Tidak ada log</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if pagination.pages > 1 %}
+    <div class="card-body border-top d-flex justify-content-between align-items-center">
+        <small class="text-muted">
+            Halaman {{ pagination.page }} dari {{ pagination.pages }}
+        </small>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('logs.index', page=pagination.prev_num, **filters) }}">&laquo;</a>
+                </li>
+                {% endif %}
+                {% for page_num in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+                {% if page_num %}
+                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('logs.index', page=page_num, **filters) }}">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+                {% endfor %}
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('logs.index', page=pagination.next_num, **filters) }}">&raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

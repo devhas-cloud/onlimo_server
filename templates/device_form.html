@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}{% if device %}Edit Device{% else %}Tambah Device{% endif %} - Onlimo DLH{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="section-header">
+            <h4>
+                {% if device %}
+                <i class="bi bi-pencil"></i> Edit Device: {{ device.device_id }}
+                {% else %}
+                <i class="bi bi-plus-circle"></i> Tambah Device Baru
+                {% endif %}
+            </h4>
+            <a href="{{ url_for('devices.index') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Kembali
+            </a>
+        </div>
+
+        <div class="card">
+            <form method="POST">
+                <div class="card-body">
+                    <div class="card-title-section">Informasi Device</div>
+
+                    {% if not device %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="device_id" class="form-label">Device ID <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="device_id" name="device_id"
+                                   placeholder="Contoh: DEVICE001" required>
+                            <div class="form-text">ID unik device, juga digunakan sebagai nama folder FTP.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="device_name" class="form-label">Device Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="device_name" name="device_name"
+                                   placeholder="Contoh: Stasiun Kali Brantas" required>
+                            <div class="form-text">Nama deskriptif untuk device.</div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="device_id" class="form-label">Device ID</label>
+                            <input type="text" class="form-control" id="device_id" value="{{ device.device_id }}" disabled>
+                            <div class="form-text">ID unik tidak dapat diubah.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="device_name" class="form-label">Device Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="device_name" name="device_name"
+                                   value="{{ device.device_name }}" required>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="userftp" class="form-label">FTP Username</label>
+                            <input type="text" class="form-control" id="userftp" name="userftp"
+                                   value="{{ device.userftp if device else '' }}"
+                                   placeholder="Default: sama dengan Device ID">
+                            <div class="form-text">Username akun FTP. Default sama dengan Device ID.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="passwordftp" class="form-label">FTP Password</label>
+                            <input type="text" class="form-control" id="passwordftp" name="passwordftp"
+                                   value="{{ device.passwordftp if device else 'onlimo_pass_2026' }}"
+                                   placeholder="Default: onlimo_pass_2026">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="read_csv_status" class="form-label">CSV Reader Status</label>
+                            <select class="form-select" id="read_csv_status" name="read_csv_status">
+                                <option value="inactive" {% if device and device.read_csv_status == 'inactive' %}selected{% endif %}>
+                                    Inactive
+                                </option>
+                                <option value="active" {% if device and device.read_csv_status == 'active' %}selected{% endif %}>
+                                    Active
+                                </option>
+                            </select>
+                            <div class="form-text">Jika active, server membaca data.csv di folder FTP secara berkala.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="dlh_status" class="form-label">DLH Send Status</label>
+                            <select class="form-select" id="dlh_status" name="dlh_status">
+                                <option value="inactive" {% if device and device.dlh_status == 'inactive' %}selected{% endif %}>
+                                    Inactive
+                                </option>
+                                <option value="active" {% if device and device.dlh_status == 'active' %}selected{% endif %}>
+                                    Active
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {% if device %}
+                    <div class="divider"></div>
+                    <div class="card-title-section">Konfigurasi DLH API</div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="dlh_api_url" class="form-label">API URL</label>
+                            <input type="url" class="form-control" id="dlh_api_url" name="dlh_api_url"
+                                   value="{{ device.dlh_api_url or '' }}"
+                                   placeholder="https://api.example.com/data">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="dlh_uid" class="form-label">UID (IDStasiun)</label>
+                            <input type="text" class="form-control" id="dlh_uid" name="dlh_uid"
+                                   value="{{ device.dlh_uid or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="dlh_api_key" class="form-label">API Key</label>
+                            <input type="text" class="form-control" id="dlh_api_key" name="dlh_api_key"
+                                   value="{{ device.dlh_api_key or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="dlh_api_secret" class="form-label">API Secret</label>
+                            <input type="password" class="form-control" id="dlh_api_secret" name="dlh_api_secret"
+                                   value="{{ device.dlh_api_secret or '' }}">
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white border-top d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('devices.index') }}" class="btn btn-secondary">
+                        Batal
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

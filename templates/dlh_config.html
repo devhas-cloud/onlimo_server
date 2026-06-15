@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}DLH Config - Onlimo DLH{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h4><i class="bi bi-cloud-upload"></i> Konfigurasi DLH API</h4>
+</div>
+
+{% if edit_mode and device %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="section-header">
+            <h5 class="mb-0">Edit: {{ device.device_id }}</h5>
+            <a href="{{ url_for('dlh_config.index') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Kembali
+            </a>
+        </div>
+
+        <div class="card">
+            <form method="POST" action="{{ url_for('dlh_config.edit', device_id=device.id) }}">
+                <div class="card-body">
+                    <div class="card-title-section">Status & Koneksi</div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="dlh_status" class="form-label">DLH Status</label>
+                            <select class="form-select" id="dlh_status" name="dlh_status">
+                                <option value="inactive" {% if device.dlh_status == 'inactive' %}selected{% endif %}>
+                                    Inactive
+                                </option>
+                                <option value="active" {% if device.dlh_status == 'active' %}selected{% endif %}>
+                                    Active
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="dlh_uid" class="form-label">UID (IDStasiun)</label>
+                            <input type="text" class="form-control" id="dlh_uid" name="dlh_uid"
+                                   value="{{ device.dlh_uid or '' }}" placeholder="IDStasiun dari DLH">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="dlh_api_url" class="form-label">DLH API URL</label>
+                        <input type="url" class="form-control" id="dlh_api_url" name="dlh_api_url"
+                               value="{{ device.dlh_api_url or '' }}" placeholder="https://api.example.com/data">
+                    </div>
+
+                    <div class="card-title-section">Autentikasi</div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="dlh_api_key" class="form-label">API Key</label>
+                            <input type="text" class="form-control" id="dlh_api_key" name="dlh_api_key"
+                                   value="{{ device.dlh_api_key or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="dlh_api_secret" class="form-label">API Secret</label>
+                            <input type="password" class="form-control" id="dlh_api_secret" name="dlh_api_secret"
+                                   value="{{ device.dlh_api_secret or '' }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('dlh_config.index') }}" class="btn btn-secondary">Batal</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Device ID</th>
+                        <th>Device Name</th>
+                        <th>DLH Status</th>
+                        <th>API URL</th>
+                        <th>API Key</th>
+                        <th>UID</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in devices %}
+                    <tr>
+                        <td class="row-number">{{ loop.index }}</td>
+                        <td class="device-id">{{ device.device_id }}</td>
+                        <td>{{ device.device_name }}</td>
+                        <td>
+                            {% if device.dlh_status == 'active' %}
+                            <span class="badge-status badge-active">Active</span>
+                            {% else %}
+                            <span class="badge-status badge-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if device.dlh_api_url %}
+                            <small>{{ device.dlh_api_url[:50] }}{% if device.dlh_api_url|length > 50 %}...{% endif %}</small>
+                            {% else %}
+                            <span class="text-value-empty">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if device.dlh_api_key %}
+                            <small>{{ device.dlh_api_key[:20] }}...</small>
+                            {% else %}
+                            <span class="text-value-empty">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ device.dlh_uid or '—' }}</td>
+                        <td>
+                            <a href="{{ url_for('dlh_config.edit', device_id=device.id) }}"
+                               class="btn btn-icon btn-outline-primary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not devices %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">Belum ada device</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

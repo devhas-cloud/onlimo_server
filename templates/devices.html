@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Devices - Onlimo DLH{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h4><i class="bi bi-cpu"></i> Devices</h4>
+    <a href="{{ url_for('devices.add') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Tambah Device
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Device ID</th>
+                        <th>Device Name</th>
+                        <th>FTP User</th>
+                        <th>FTP Password</th>
+                        <th>CSV Status</th>
+                        <th>DLH Status</th>
+                        <th>DLH UID</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in devices %}
+                    <tr>
+                        <td class="row-number">{{ loop.index }}</td>
+                        <td class="device-id">{{ device.device_id }}</td>
+                        <td>{{ device.device_name }}</td>
+                        <td>{{ device.userftp }}</td>
+                        <td>
+                            <span class="password-field" data-password="{{ device.passwordftp }}">******</span>
+                            <button class="btn btn-sm btn-link toggle-password p-0 ms-1" data-target="{{ loop.index }}">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                        <td>
+                            {% if device.read_csv_status == 'active' %}
+                            <span class="badge-status badge-active">Active</span>
+                            {% else %}
+                            <span class="badge-status badge-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if device.dlh_status == 'active' %}
+                            <span class="badge-status badge-active">Active</span>
+                            {% else %}
+                            <span class="badge-status badge-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td><small class="text-muted">{{ device.dlh_uid or '—' }}</small></td>
+                        <td>
+                            <a href="{{ url_for('devices.edit', id=device.id) }}"
+                               class="btn btn-icon btn-outline-primary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('devices.delete', id=device.id) }}"
+                                  class="d-inline" data-confirm="Yakin hapus device {{ device.device_id }}?">
+                                <button type="submit" class="btn btn-icon btn-outline-danger" title="Hapus">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not devices %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">Belum ada device</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const span = this.previousElementSibling;
+        if (span.textContent === '******') {
+            span.textContent = span.dataset.password;
+            this.innerHTML = '<i class="bi bi-eye-slash"></i>';
+        } else {
+            span.textContent = '******';
+            this.innerHTML = '<i class="bi bi-eye"></i>';
+        }
+    });
+});
+</script>
+{% endblock %}
