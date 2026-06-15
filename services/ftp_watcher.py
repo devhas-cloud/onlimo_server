@@ -18,79 +18,80 @@ FILE_PROCESS_TIMEOUT = 60
 
 
 def _process_csv_file(csv_file, device, app):
-    measurements = parse_csv_file(csv_file, device.device_id)
+    with app.app_context():
+        measurements = parse_csv_file(csv_file, device.device_id)
 
-    if measurements is None:
-        logger.error(f"Error parsing CSV {csv_file} for device {device.device_id}")
-        return
+        if measurements is None:
+            logger.error(f"Error parsing CSV {csv_file} for device {device.device_id}")
+            return
 
-    if not measurements:
-        logger.warning(f"No valid data in CSV {csv_file} for device {device.device_id}")
-        try:
-            os.remove(csv_file)
-            logger.info(f"Deleted empty CSV {csv_file}")
-        except OSError as e:
-            logger.error(f"Error deleting {csv_file}: {e}")
-        return
-
-    saved_count = 0
-    new_records = []
-    for m in measurements:
-        existing = DataMeasurement.query.filter_by(
-            device_id=m['device_id'],
-            timestamp=m['timestamp']
-        ).first()
-
-        if existing:
-            continue
-
-        record = DataMeasurement(
-            device_id=m['device_id'],
-            timestamp=m['timestamp'],
-            ph=m.get('ph'),
-            orp=m.get('orp'),
-            tds=m.get('tds'),
-            conduct=m.get('conduct'),
-            do=m.get('do'),
-            salinity=m.get('salinity'),
-            nh3n=m.get('nh3n'),
-            battery=m.get('battery'),
-            depth=m.get('depth'),
-            flow=m.get('flow'),
-            tflow=m.get('tflow'),
-            turb=m.get('turb'),
-            tss=m.get('tss'),
-            cod=m.get('cod'),
-            bod=m.get('bod'),
-            no3=m.get('no3'),
-            wtemp=m.get('wtemp'),
-            wpress=m.get('wpress'),
-            dlh_send_status='pending',
-            has_send_status='pending'
-        )
-        db.session.add(record)
-        new_records.append(record)
-        saved_count += 1
-
-    try:
-        db.session.commit()
-        logger.info(f"Saved {saved_count} new measurements from {os.path.basename(csv_file)} for device {device.device_id}")
-
-        try:
-            os.remove(csv_file)
-            logger.info(f"Deleted {csv_file} for device {device.device_id}")
-        except OSError as e:
-            logger.error(f"Error deleting {csv_file} for device {device.device_id}: {e}")
-
-        if new_records:
+        if not measurements:
+            logger.warning(f"No valid data in CSV {csv_file} for device {device.device_id}")
             try:
-                send_to_has(device.device_id, new_records)
-            except Exception as e:
-                logger.error(f"Error sending to HAS for device {device.device_id}: {e}")
+                os.remove(csv_file)
+                logger.info(f"Deleted empty CSV {csv_file}")
+            except OSError as e:
+                logger.error(f"Error deleting {csv_file}: {e}")
+            return
 
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error saving measurements from {csv_file} for device {device.device_id}: {e}")
+        saved_count = 0
+        new_records = []
+        for m in measurements:
+            existing = DataMeasurement.query.filter_by(
+                device_id=m['device_id'],
+                timestamp=m['timestamp']
+            ).first()
+
+            if existing:
+                continue
+
+            record = DataMeasurement(
+                device_id=m['device_id'],
+                timestamp=m['timestamp'],
+                ph=m.get('ph'),
+                orp=m.get('orp'),
+                tds=m.get('tds'),
+                conduct=m.get('conduct'),
+                do=m.get('do'),
+                salinity=m.get('salinity'),
+                nh3n=m.get('nh3n'),
+                battery=m.get('battery'),
+                depth=m.get('depth'),
+                flow=m.get('flow'),
+                tflow=m.get('tflow'),
+                turb=m.get('turb'),
+                tss=m.get('tss'),
+                cod=m.get('cod'),
+                bod=m.get('bod'),
+                no3=m.get('no3'),
+                wtemp=m.get('wtemp'),
+                wpress=m.get('wpress'),
+                dlh_send_status='pending',
+                has_send_status='pending'
+            )
+            db.session.add(record)
+            new_records.append(record)
+            saved_count += 1
+
+        try:
+            db.session.commit()
+            logger.info(f"Saved {saved_count} new measurements from {os.path.basename(csv_file)} for device {device.device_id}")
+
+            try:
+                os.remove(csv_file)
+                logger.info(f"Deleted {csv_file} for device {device.device_id}")
+            except OSError as e:
+                logger.error(f"Error deleting {csv_file} for device {device.device_id}: {e}")
+
+            if new_records:
+                try:
+                    send_to_has(device.device_id, new_records)
+                except Exception as e:
+                    logger.error(f"Error sending to HAS for device {device.device_id}: {e}")
+
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error saving measurements from {csv_file} for device {device.device_id}: {e}")
 
 
 def run_ftp_watcher(app):
