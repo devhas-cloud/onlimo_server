@@ -8,7 +8,7 @@ class ConfigDevice(db.Model):
     device_id = db.Column(db.String(255), unique=True, nullable=False)
     device_name = db.Column(db.String(255), nullable=False)
     userftp = db.Column(db.String(255), nullable=False, default='onlimo')
-    passwordftp = db.Column(db.String(255), nullable=False, default='onlimo_pass_2026')
+    passwordftp = db.Column(db.String(255), nullable=False, default='has123456')
     dlh_status = db.Column(db.String(50), nullable=False, default='inactive')
     dlh_api_url = db.Column(db.Text, nullable=True)
     dlh_api_key = db.Column(db.Text, nullable=True)

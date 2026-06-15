@@ -78,6 +78,7 @@
                         {% else %}
                         <th>DLH Status</th>
                         {% endif %}
+                        <th>Keterangan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -101,6 +102,7 @@
                             <span class="badge-status badge-pending">Pending</span>
                             {% endif %}
                         </td>
+                        <td>{{ log.has_response }}</td>
                         {% else %}
                         <td>
                             {% if log.dlh_send_status == 'sent' %}
@@ -111,7 +113,9 @@
                             <span class="badge-status badge-pending">Pending</span>
                             {% endif %}
                         </td>
+                        <td>{{ log.dlh_response }}</td>
                         {% endif %}
+
                     </tr>
                     {% endfor %}
                     {% if not logs %}
