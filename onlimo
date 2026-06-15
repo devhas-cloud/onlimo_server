@@ -1,0 +1,9 @@
+/var/log/onlimo/onlimo.log {
+    size 2M
+    rotate 1
+    missingok
+    notifempty
+    copytruncate
+    compress
+    delaycompress
+}
