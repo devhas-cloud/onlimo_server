@@ -5,6 +5,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_required
 from models import db
 from models.config_device import ConfigDevice
+from models.data_measurement import DataMeasurement
 from services.ftp_manager import add_ftp_user, delete_ftp_user
 from config import Config
 
@@ -114,6 +115,7 @@ def delete(id):
     except Exception as e:
         logger.warning(f"Could not delete folder for device {device.device_id}: {e}")
 
+    DataMeasurement.query.filter_by(device_id=device.device_id).delete()
     db.session.delete(device)
     db.session.commit()
 
